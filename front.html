@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduGuard — Dropout Risk Intelligence System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f4f2ee; --surface:#fff; --card:#fff; --card2:#fafaf7;
+  --border:#e0dbd4; --border2:#ccc6bd;
+  --navy:#0f2744; --navy2:#1a3a5c; --navy3:#e8edf4;
+  --red:#c0392b; --red-light:#e74c3c;
+  --gold:#b8860b; --gold2:#d4a017;
+  --green:#1a6b5e; --green-light:#1e7e5e;
+  --text:#1a1814; --text2:#3a3530; --muted:#7a736a;
+  --mono:'DM Mono',monospace; --head:'Playfair Display',serif; --body:'DM Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;font-size:14px;}
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--navy);z-index:100;display:flex;flex-direction:column;box-shadow:4px 0 18px rgba(0,0,0,0.13);}
+.sidebar-logo{padding:24px 22px 20px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.sidebar-logo h1{font-family:var(--head);font-size:22px;font-weight:900;color:#fff;}
+.sidebar-logo h1 span{color:#f87171;}
+.sidebar-logo p{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.38);margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+.logo-badge{display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.52);font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:4px;}
+.logo-badge::before{content:'';width:6px;height:6px;background:#22c55e;border-radius:50%;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.nav-section{padding:18px 18px 5px;font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.26);text-transform:uppercase;letter-spacing:2px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 18px;margin:2px 8px;border-radius:6px;cursor:pointer;transition:all 0.15s;font-size:13.5px;color:rgba(255,255,255,0.5);font-weight:500;border:1px solid transparent;}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85);}
+.nav-item.active{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.13);}
+.nav-item .icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-footer{margin-top:auto;padding:18px 22px;border-top:1px solid rgba(255,255,255,0.09);font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.28);}
+.model-pill{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.13);color:rgba(255,255,255,0.42);padding:4px 10px;border-radius:4px;font-size:10px;display:inline-block;margin-top:6px;}
+/* MAIN */
+.main{margin-left:240px;min-height:100vh;}
+.page{display:none;animation:fadeUp 0.3s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+/* TOPBAR */
+.page-topbar{background:var(--navy);padding:9px 34px;display:flex;align-items:center;justify-content:space-between;}
+.tb-title{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.38);letter-spacing:1px;text-transform:uppercase;}
+.tb-right{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.3);display:flex;gap:14px;align-items:center;}
+.live-dot{width:6px;height:6px;background:#22c55e;border-radius:50%;display:inline-block;animation:blink 2s ease-in-out infinite;margin-right:4px;}
+/* PAGE BODY */
+.page-body{padding:26px 34px;}
+.page-header{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.page-header h2{font-family:var(--head);font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-0.2px;}
+.page-header p{color:var(--muted);font-size:11.5px;margin-top:4px;font-family:var(--mono);}
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 18px 14px;position:relative;overflow:hidden;transition:all 0.2s;}
+.stat-card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.07);transform:translateY(-1px);}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.c-navy::after{background:var(--navy);}
+.c-red::after{background:var(--red-light);}
+.c-yellow::after{background:var(--gold2);}
+.c-green::after{background:var(--green-light);}
+.stat-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:11px;}
+.c-navy .stat-icon{background:var(--navy3);}
+.c-red .stat-icon{background:#fdecea;}
+.c-yellow .stat-icon{background:#fdf5e0;}
+.c-green .stat-icon{background:#e7f4f1;}
+.stat-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.stat-val{font-family:var(--head);font-size:38px;font-weight:900;line-height:1;letter-spacing:-1px;}
+.v-navy{color:var(--navy);} .v-red{color:var(--red-light);} .v-yellow{color:var(--gold2);} .v-green{color:var(--green-light);}
+.stat-sub{font-size:11.5px;color:var(--muted);margin-top:6px;}
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.panel-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.ptag{font-family:var(--mono);font-size:9px;background:var(--navy3);color:var(--navy2);padding:2px 7px;border-radius:4px;margin-left:auto;}
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+.donut-rel{position:relative;flex-shrink:0;}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.donut-center-num{font-family:var(--head);font-size:17px;font-weight:800;color:var(--navy);line-height:1;}
+.donut-center-label{font-family:var(--mono);font-size:7.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:2px;}
+.leg{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.leg:last-child{border-bottom:none;margin-bottom:0;}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.leg-label{flex:1;}
+.leg-count{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text);}
+.leg-pct{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:34px;text-align:right;}
+/* DEPT ROW */
+.dept-row{display:grid;grid-template-columns:52px 1fr 50px 46px;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.dept-row:last-child{border-bottom:none;}
+.dept-tag{font-family:var(--mono);font-size:11px;background:var(--navy3);border:1px solid rgba(15,39,68,0.11);color:var(--navy2);padding:3px 5px;border-radius:4px;text-align:center;font-weight:600;}
+.dept-bar-wrap{background:var(--bg);border-radius:3px;height:5px;overflow:hidden;}
+.dept-bar-fill{height:5px;border-radius:3px;background:var(--red-light);transition:width 1s ease;}
+.dept-num{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;}
+.dept-num b{color:var(--red-light);}
+/* ALERT */
+.alert-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.alert-row:last-child{border-bottom:none;}
+.alert-id{font-family:var(--mono);font-size:11.5px;color:var(--navy2);font-weight:500;}
+.alert-dept{font-size:12px;color:var(--muted);margin-top:2px;}
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.table-controls{display:flex;gap:8px;padding:13px 16px;border-bottom:1px solid var(--border);background:var(--card2);flex-wrap:wrap;align-items:center;}
+.search-box{flex:1;min-width:170px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--body);font-size:13px;padding:7px 12px;border-radius:6px;outline:none;}
+.search-box::placeholder{color:var(--muted);}
+.search-box:focus{border-color:var(--navy);}
+.filter-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--body);font-size:12px;font-weight:500;padding:7px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;}
+.filter-btn:hover{border-color:var(--navy);color:var(--navy);}
+.filter-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.table-count-bar{font-family:var(--mono);font-size:11px;color:var(--muted);padding:6px 16px;border-bottom:1px solid var(--border);background:var(--card2);}
+table{width:100%;border-collapse:collapse;}
+th{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);background:var(--card2);white-space:nowrap;}
+td{padding:9px 13px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text2);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f7f5f1;}
+.student-id{font-family:var(--mono);font-size:11.5px;color:var(--navy2);font-weight:500;}
+.badge{padding:3px 8px;border-radius:4px;font-family:var(--mono);font-size:10px;font-weight:600;}
+.badge-high{background:rgba(192,57,43,0.1);color:var(--red-light);}
+.badge-medium{background:rgba(184,134,11,0.1);color:var(--gold2);}
+.badge-low{background:rgba(26,107,94,0.1);color:var(--green-light);}
+.prob-bar{display:flex;align-items:center;gap:7px;}
+.prob-track{flex:1;min-width:55px;background:var(--bg);border-radius:3px;height:4px;overflow:hidden;}
+.prob-fill{height:4px;border-radius:3px;}
+.prob-fill.high{background:var(--red-light);} .prob-fill.medium{background:var(--gold2);} .prob-fill.low{background:var(--green-light);}
+.prob-pct{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:28px;text-align:right;}
+.btn-detail{background:var(--surface);border:1px solid var(--border);color:var(--navy);font-family:var(--body);font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:5px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.btn-detail:hover{background:var(--navy);border-color:var(--navy);color:#fff;}
+.dept-tag-sm{font-family:var(--mono);font-size:10px;background:var(--navy3);border:1px solid rgba(15,39,68,0.1);color:var(--navy2);padding:2px 6px;border-radius:4px;font-weight:600;}
+.source-badge{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;margin-left:3px;}
+.source-uploaded{background:rgba(184,134,11,0.1);color:var(--gold2);border:1px solid rgba(184,134,11,0.2);}
+.source-system{background:var(--navy3);color:var(--navy2);border:1px solid rgba(15,39,68,0.1);}
+/* FEAT BARS */
+.feat-row{margin-bottom:11px;}
+.feat-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:5px;}
+.feat-meta b{color:var(--text2);}
+.bar-bg{background:var(--bg);border-radius:3px;height:7px;overflow:hidden;}
+.bar-fill{height:7px;border-radius:3px;background:linear-gradient(90deg,var(--navy2),var(--navy));transition:width 1.2s cubic-bezier(0.4,0,0.2,1);}
+.bar-fill.r1{background:linear-gradient(90deg,var(--red),var(--red-light));}
+.bar-fill.r2{background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.bar-fill.r3{background:linear-gradient(90deg,#2563eb,#60a5fa);}
+/* IMPORT */
+.import-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+.upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:40px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--card2);position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--navy);background:var(--navy3);}
+.upload-zone.done{border-color:var(--green-light);border-style:solid;background:rgba(26,107,94,0.04);}
+.upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uz-icon{font-size:42px;margin-bottom:12px;transition:transform 0.25s;}
+.upload-zone:hover .uz-icon{transform:scale(1.08);}
+.uz-title{font-family:var(--head);font-size:17px;color:var(--navy);margin-bottom:5px;}
+.uz-sub{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.9;}
+.uz-formats{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+.uz-fmt{font-family:var(--mono);font-size:10px;background:var(--navy3);border:1px solid rgba(15,39,68,0.11);color:var(--navy2);padding:2px 9px;border-radius:10px;}
+.mapping-panel{display:none;}
+.mapping-panel.show{display:block;}
+.map-row{display:grid;grid-template-columns:1fr 16px 1fr;align-items:center;gap:7px;margin-bottom:8px;}
+.map-label{font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--bg);border:1px solid var(--border);padding:6px 10px;border-radius:5px;}
+.map-arrow{color:var(--muted);text-align:center;font-size:12px;}
+.map-select{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:5px;outline:none;width:100%;}
+.map-select:focus{border-color:var(--navy);}
+.progress-box{display:none;margin-top:13px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:17px;}
+.progress-box.show{display:block;}
+.prog-title{font-family:var(--mono);font-size:12px;color:var(--navy2);margin-bottom:10px;font-weight:500;}
+.prog-bar-bg{background:var(--bg);border-radius:3px;height:6px;margin-bottom:9px;overflow:hidden;}
+.prog-bar-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--navy2),var(--navy));width:0%;transition:width 0.4s ease;}
+.prog-step{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;margin-bottom:4px;line-height:2;}
+.prog-step.done{color:var(--green-light);} .prog-step.active{color:var(--navy);} .prog-step.wait{color:var(--muted);}
+.prog-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.prog-step.done .prog-dot{background:var(--green-light);}
+.prog-step.active .prog-dot{background:var(--navy);animation:blink 1s infinite;}
+.prog-step.wait .prog-dot{background:var(--border2);}
+.preview-section{display:none;margin-top:16px;}
+.preview-section.show{display:block;}
+.preview-scroll{overflow-x:auto;border-radius:7px;border:1px solid var(--border);}
+.btn-row{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap;}
+.btn-import{background:var(--navy);border:none;color:#fff;font-family:var(--head);font-size:14px;font-weight:700;padding:11px 24px;border-radius:7px;cursor:pointer;transition:all 0.2s;}
+.btn-import:hover{background:var(--navy2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,39,68,0.22);}
+.btn-reset{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--body);font-size:12px;padding:11px 17px;border-radius:7px;cursor:pointer;transition:all 0.15s;}
+.btn-reset:hover{border-color:var(--red);color:var(--red);}
+.field-guide{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:17px;}
+.fg-title{font-family:var(--head);font-size:14px;color:var(--navy);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.fg-field{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);}
+.fg-field:last-child{border-bottom:none;}
+.fg-name{font-family:var(--mono);font-size:11px;color:var(--navy2);font-weight:500;}
+.fg-desc{font-size:12px;color:var(--muted);text-align:right;max-width:155px;}
+.fg-required{color:var(--red-light);font-size:9px;font-family:var(--mono);margin-top:1px;}
+.import-banner{display:none;padding:10px 15px;border-radius:7px;font-family:var(--mono);font-size:12px;margin-bottom:14px;align-items:center;gap:9px;}
+.import-banner.show{display:flex;}
+.import-banner.success{background:rgba(26,107,94,0.08);border:1px solid rgba(26,107,94,0.24);color:var(--green-light);}
+.import-banner.warn{background:rgba(184,134,11,0.08);border:1px solid rgba(184,134,11,0.2);color:var(--gold2);}
+/* STUDENT DETAIL */
+.back-btn{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);color:var(--navy);font-family:var(--body);font-size:12.5px;font-weight:500;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;margin-bottom:17px;}
+.back-btn:hover{background:var(--navy);border-color:var(--navy);color:#fff;}
+.student-hero{background:var(--navy);border-radius:10px;padding:22px 24px;margin-bottom:15px;display:flex;align-items:center;gap:20px;}
+.student-avatar{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,0.13);border:2px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:22px;color:#fff;flex-shrink:0;}
+.student-info h3{font-family:var(--head);font-size:20px;font-weight:800;color:#fff;}
+.student-info .sid{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.46);margin-top:3px;}
+.student-info .tags{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+.student-tag{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.65);padding:3px 9px;border-radius:4px;}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.metric-item{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:12px;}
+.metric-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.metric-val{font-family:var(--head);font-size:22px;font-weight:700;}
+.int-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);display:flex;gap:9px;align-items:flex-start;line-height:1.5;}
+.int-item:last-child{border-bottom:none;}
+.int-item::before{content:'→';color:var(--gold2);font-weight:700;flex-shrink:0;margin-top:1px;}
+.timeline-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.timeline-item:last-child{border-bottom:none;}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.tl-text{font-size:13px;color:var(--text2);}
+.tl-time{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;}
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;z-index:9999;background:var(--navy);border-radius:7px;padding:11px 16px;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.86);box-shadow:0 8px 24px rgba(0,0,0,0.16);display:none;max-width:300px;animation:fadeUp 0.25s ease;}
+.toast.show{display:block;}
+.toast.ok{border-left:3px solid var(--green-light);}
+.toast.err{border-left:3px solid var(--red-light);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid rgba(15,39,68,0.17);border-top-color:var(--navy);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:5px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Edu<span>Guard</span></h1>
+    <p>Ministry of Education · AI System</p>
+    <div class="logo-badge">Live System</div>
+  </div>
+  <div class="nav-section">Navigation</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Dashboard</div>
+  <div class="nav-item" onclick="showPage('students',this)"><span class="icon">👥</span> Students</div>
+  <div class="nav-item" onclick="showPage('import',this)"><span class="icon">📂</span> Import CSV</div>
+  <div class="nav-item" onclick="showPage('survey',this)"><span class="icon">🧠</span> Student Survey</div>
+  <div class="nav-section" style="margin-top:4px;">Analysis</div>
+  <div class="nav-item" onclick="showPage('features',this)"><span class="icon">📈</span> Feature Analysis</div>
+  <div class="nav-item" onclick="showPage('about',this)"><span class="icon">📋</span> About</div>
+  <div class="sidebar-footer">
+    <div style="color:rgba(255,255,255,0.48);font-size:12px;font-weight:500;">EduGuard v3.0</div>
+    <div style="color:rgba(255,255,255,0.28);font-size:11px;margin-top:3px;" id="sidebar-import-count"></div>
+    <div class="model-pill">Random Forest Classifier</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-topbar">
+    <span class="tb-title">AIML-01 · Dropout Risk Prediction System · Ministry of Education, Govt. of India</span>
+    <div class="tb-right"><span class="live-dot"></span><span id="live-time">—</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-header">
+      <h2>Overview Dashboard</h2>
+      <p>Real-time dropout risk analysis across all departments</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card c-navy"><div class="stat-icon">🎓</div><div class="stat-label">Total Students</div><div class="stat-val v-navy" id="s-total">—</div><div class="stat-sub">Across all departments</div></div>
+      <div class="stat-card c-red"><div class="stat-icon">⚠️</div><div class="stat-label">High Risk</div><div class="stat-val v-red" id="s-high">—</div><div class="stat-sub">Immediate intervention</div></div>
+      <div class="stat-card c-yellow"><div class="stat-icon">📊</div><div class="stat-label">Medium Risk</div><div class="stat-val v-yellow" id="s-med">—</div><div class="stat-sub">Requires monitoring</div></div>
+      <div class="stat-card c-green"><div class="stat-icon">✓</div><div class="stat-label">Low Risk</div><div class="stat-val v-green" id="s-low">—</div><div class="stat-sub">Stable performance</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="panel">
+        <div class="panel-title">🏛 Department Risk Breakdown <span class="ptag">All Depts</span></div>
+        <div class="donut-wrap">
+          <div class="donut-rel">
+            <svg id="donut-svg" width="116" height="116" viewBox="0 0 116 116" style="transform:rotate(-90deg);flex-shrink:0;"></svg>
+            <div class="donut-center"><div class="donut-center-num" id="donut-total">—</div><div class="donut-center-label">Students</div></div>
+          </div>
+          <div style="flex:1;" id="donut-legend"></div>
+        </div>
+        <div id="dept-rows"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">⚠️ High-Risk Alerts <span class="ptag">Top 8</span></div>
+        <div id="alert-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENTS -->
+<div class="page" id="page-students">
+  <div class="page-topbar">
+    <span class="tb-title">AIML-01 · Student Registry</span>
+    <div class="tb-right"><span id="live-time2">—</span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-header">
+      <h2>Student Registry</h2>
+      <p>All students · System data + CSV imports · Click Details for individual profile</p>
+    </div>
+    <div class="import-banner" id="import-banner"><span>✓</span><span id="import-banner-text"></span></div>
+    <div class="table-wrap">
+      <div class="table-controls">
+        <input class="search-box" type="text" placeholder="Search name, ID, department..." id="search-input" oninput="renderTable()">
+        <button class="filter-btn active" onclick="setFilter('All',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('High',this)">🔴 High</button>
+        <button class="filter-btn" onclick="setFilter('Medium',this)">🟡 Medium</button>
+        <button class="filter-btn" onclick="setFilter('Low',this)">🟢 Low</button>
+        <button class="filter-btn" onclick="setFilter('imported',this)" id="btn-filter-imported" style="display:none;">📂 Imported</button>
+      </div>
+      <div class="table-count-bar" id="table-count">Loading…</div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Name</th><th>Dept</th><th>Sem</th>
+            <th>Attend%</th><th>SGPA</th><th>Backlogs</th><th>Fee</th>
+            <th>Risk Score</th><th>Level</th><th>Source</th><th>Action</th>
+            <th>Survey</th>
+          
+          
+          </tr></thead>
+        
+          <tbody id="student-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT CSV -->
+<div class="page" id="page-import">
+  <div class="page-topbar"><span class="tb-title">AIML-01 · CSV Import</span></div>
+  <div class="page-body">
+    <div class="page-header">
+      <h2>Import CSV</h2>
+      <p>Upload any CSV · Auto-detect columns · Students scored instantly</p>
+    </div>
+    <div class="import-layout">
+      <div>
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" class="upload-input" id="csv-upload" accept=".csv,text/csv">
+          <div class="uz-icon" id="uz-icon">📂</div>
+          <div class="uz-title" id="uz-title">Drop your CSV here</div>
+          <div class="uz-sub" id="uz-sub">or click to browse files<br>Any column names accepted — we map them for you</div>
+          <div class="uz-formats"><span class="uz-fmt">.CSV</span><span class="uz-fmt">UTF-8</span><span class="uz-fmt">Any columns</span></div>
+        </div>
+        <div class="mapping-panel" id="mapping-panel" style="margin-top:14px;">
+          <div class="panel">
+            <div class="panel-title">🔗 Column Mapping</div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:13px;line-height:1.7;">We detected the following columns. Verify or adjust the mapping to our system fields:</p>
+            <div id="mapping-rows"></div>
+            <div class="btn-row">
+              <button class="btn-import" onclick="processAndImport()">⚡ Process & Import All Students</button>
+              <button class="btn-reset" onclick="resetUpload()">✕ Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="progress-box" id="progress-box">
+          <div class="prog-title"><span class="spinner"></span>Processing students…</div>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-fill"></div></div>
+          <div id="prog-steps"></div>
+        </div>
+        <div class="preview-section" id="preview-section">
+          <div class="panel">
+            <div class="panel-title">✅ Import Complete · Preview</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+              <div style="font-family:var(--mono);font-size:11px;color:var(--muted);" id="preview-count"></div>
+              <button class="btn-import" style="padding:8px 16px;font-size:13px;" onclick="goToStudents()">👥 View in Students →</button>
+            </div>
+            <div class="preview-scroll">
+              <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Sem</th><th>Attend%</th><th>SGPA</th><th>Backlogs</th><th>Fee</th><th>Risk</th><th>Level</th></tr></thead>
+                <tbody id="preview-tbody"></tbody>
+              </table>
+            </div>
+            <div class="btn-row" style="margin-top:12px;">
+              <button class="btn-reset" onclick="resetUpload()">📂 Upload Another CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="field-guide">
+          <div class="fg-title">📋 System Field Reference</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:13px;line-height:1.7;">Your CSV can use <b style="color:var(--text2)">any column names</b>. We auto-map common variations. Missing fields get sensible defaults.</p>
+          <div class="fg-field"><div><div class="fg-name">student_id</div><div class="fg-required">auto-generated if missing</div></div><div class="fg-desc">Unique student identifier</div></div>
+          <div class="fg-field"><div><div class="fg-name">name</div></div><div class="fg-desc">Full name of student</div></div>
+          <div class="fg-field"><div><div class="fg-name">department</div><div class="fg-required">required</div></div><div class="fg-desc">CSE / ECE / ME / CE / EEE</div></div>
+          <div class="fg-field"><div><div class="fg-name">semester</div><div class="fg-required">required</div></div><div class="fg-desc">1 – 8</div></div>
+          <div class="fg-field"><div><div class="fg-name">attendance_pct</div><div class="fg-required">required · key predictor</div></div><div class="fg-desc">0–100 percentage</div></div>
+          <div class="fg-field"><div><div class="fg-name">internal_marks</div><div class="fg-required">required · key predictor</div></div><div class="fg-desc">0–100 marks</div></div>
+          <div class="fg-field"><div><div class="fg-name">sgpa</div><div class="fg-required">required · key predictor</div></div><div class="fg-desc">0.0 – 10.0 grade points</div></div>
+          <div class="fg-field"><div><div class="fg-name">fee_paid</div></div><div class="fg-desc">1 = Yes, 0 = No</div></div>
+          <div class="fg-field"><div><div class="fg-name">lms_logins</div></div><div class="fg-desc">Number of LMS sessions</div></div>
+          <div class="fg-field"><div><div class="fg-name">backlogs</div></div><div class="fg-desc">Number of backlog subjects</div></div>
+          <div class="fg-field"><div><div class="fg-name">family_income</div></div><div class="fg-desc">low / medium / high</div></div>
+          <div class="fg-field"><div><div class="fg-name">scholarship</div></div><div class="fg-desc">1 = Yes, 0 = No</div></div>
+        </div>
+        <div style="margin-top:13px;padding:15px;background:rgba(184,134,11,0.05);border:1px solid rgba(184,134,11,0.18);border-radius:8px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--gold2);margin-bottom:9px;text-transform:uppercase;letter-spacing:1px;">💡 Accepted Column Name Variations</div>
+          <div style="font-size:12px;color:var(--muted);line-height:2.1;font-family:var(--mono);">
+            attendance → <span style="color:var(--text2)">attendance_pct, attend%, att</span><br>
+            marks → <span style="color:var(--text2)">internal_marks, score, marks</span><br>
+            sgpa → <span style="color:var(--text2)">gpa, cgpa, grade_points</span><br>
+            department → <span style="color:var(--text2)">dept, branch, stream</span><br>
+            name → <span style="color:var(--text2)">student_name, full_name</span><br>
+            backlogs → <span style="color:var(--text2)">arrears, pending_subjects</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="page" id="page-features">
+  <div class="page-topbar"><span class="tb-title">AIML-01 · Feature Analysis</span></div>
+  <div class="page-body">
+    <div class="page-header">
+      <h2>Feature Analysis</h2>
+      <p>Model feature importance · Random Forest Classifier</p>
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;">
+      <div class="panel"><div class="panel-title">📈 Feature Importance Ranking <span class="ptag">RF Model</span></div><div id="feat-bars-full"></div></div>
+      <div class="panel"><div class="panel-title">💡 Model Insights</div><div id="model-insights"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT DETAIL -->
+<div class="page" id="page-student-detail">
+  <div class="page-topbar"><span class="tb-title">AIML-01 · Student Detail</span></div>
+  <div class="page-body">
+    <button class="back-btn" id="detail-back-btn">← Back</button>
+    <div class="student-hero" id="detail-hero"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
+      <div class="panel"><div class="panel-title">📊 Academic Metrics</div><div class="metric-grid" id="detail-metrics"></div></div>
+      <div class="panel"><div class="panel-title">⚠️ Risk Assessment</div><div id="detail-risk"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+      <div class="panel"><div class="panel-title">🎯 Intervention Plan</div><div id="detail-interventions"></div></div>
+      <div class="panel"><div class="panel-title">📅 Monitoring Timeline</div><div id="detail-timeline"></div></div>
+    </div>
+  </div>
+</div>
+<!-- ABOUT PAGE -->
+<div class="page" id="page-about">
+  <div class="page-topbar">
+    <span class="tb-title">AIML-01 · EduGuard Information</span>
+  </div>
+
+  <div class="page-body">
+    <div class="page-header">
+      <h2>About EduGuard</h2>
+      <p>AI-Based Early Dropout Risk Prediction & Intervention System · PRAGATI AI Blueprint</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px;align-items:start">
+
+      <!-- LEFT -->
+      <div class="panel">
+        <div class="panel-title">🏛️ Context</div>
+        <p style="line-height:1.9;color:var(--text2)">
+        The Ministry of Education, Government of India has reported increasing dropout rates in Tier-2 and Tier-3 engineering colleges.
+        Student data across attendance, LMS, assessments and finances remains <b>isolated and underutilized</b>.
+        EduGuard connects all signals into a single decision system and identifies students at risk early.
+        </p>
+
+        <div class="panel-title" style="margin-top:18px">🎯 Mission</div>
+        <p style="line-height:1.9;color:var(--text2)">
+        Predict dropout risk <b>before it's too late</b>.
+        Instead of reporting failure after semester results, EduGuard helps teachers act early with targeted intervention recommendations.
+        </p>
+
+        <div class="panel-title" style="margin-top:18px">⚙️ Technology</div>
+        <p style="line-height:2;color:var(--text2)">
+        <b>Algorithm:</b> Random Forest Classifier (200 Trees)<br>
+        <b>Inputs:</b> Attendance, Marks, SGPA, LMS Activity, Fees, Backlogs, Income<br>
+        <b>Output:</b> Risk Score + Action Plan<br>
+        <b>Framework:</b> Python · Flask · Scikit-learn · HTML Dashboard
+        </p>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="panel">
+        <div class="panel-title">🧠 Decision Justification Layer</div>
+
+        <div class="int-item">
+          Teachers cannot manually track 500+ students continuously.
+        </div>
+
+        <div class="int-item">
+          Rule-based systems fail because dropout causes are multi-factor.
+        </div>
+
+        <div class="int-item">
+          AI combines behavioural + academic + financial indicators simultaneously.
+        </div>
+
+        <div class="int-item">
+          System does not just predict — it recommends intervention.
+        </div>
+
+        <div class="int-item">
+          Goal: Prevention, not detection.
+        </div>
+
+        <div style="margin-top:18px;padding-top:12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--muted)">
+          EduGuard · Ministry of Education · AIML-01 Hackathon MVP · PRAGATI AI Blueprint
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div><!-- /main -->
+<div class="toast" id="toast"></div>
+<div id="surveyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:white;padding:25px;border-radius:10px;width:420px">
+    <h3>Student Behaviour Survey</h3>
+
+    Motivation:
+    <select id="sv_mot"><option value="1">Yes</option><option value="0.5">Neutral</option><option value="0">No</option></select><br><br>
+
+    Stress (1-5):
+    <input type="number" id="sv_stress" min="1" max="5"><br><br>
+
+    Family Support:
+    <select id="sv_support"><option value="1">Yes</option><option value="0.5">Sometimes</option><option value="0">No</option></select><br><br>
+
+    Part-time Work:
+    <select id="sv_work"><option value="1">Yes</option><option value="0">No</option></select><br><br>
+
+    Engagement (1-5):
+    <input type="number" id="sv_engage" min="1" max="5"><br><br>
+
+    <button onclick="submitStudentSurvey()">Submit</button>
+    <button onclick="closeSurvey()">Cancel</button>
+  </div>
+</div>
+<script>
+// ── DATA ──────────────────────────────────────
+const SYSTEM_DATA = {"summary":{"total_students":500,"high_risk":209,"medium_risk":56,"low_risk":235,"accuracy":0.67},"feature_importance":{"attendance_pct":0.1949,"internal_marks":0.1684,"sgpa":0.1441,"fee_paid":0.057,"lms_logins":0.127,"scholarship":0.0242,"backlogs":0.0779,"dept_enc":0.0614,"income_enc":0.0606,"semester":0.0846},"dept_stats":[{"department":"CE","total":112,"high_risk":46,"avg_risk":0.487},{"department":"CSE","total":109,"high_risk":45,"avg_risk":0.493},{"department":"ECE","total":95,"high_risk":32,"avg_risk":0.424},{"department":"EEE","total":93,"high_risk":43,"avg_risk":0.508},{"department":"ME","total":91,"high_risk":43,"avg_risk":0.505}],"all_students":[{"student_id":"STU0001","name":"Student_1","department":"CE","semester":2,"attendance_pct":95.5,"internal_marks":73.6,"sgpa":6.52,"fee_paid":0,"lms_logins":54,"scholarship":1,"backlogs":4,"family_income":"high","risk_prob":0.42,"risk_level":"Medium"},{"student_id":"STU0002","name":"Student_2","department":"EEE","semester":6,"attendance_pct":72.4,"internal_marks":28.3,"sgpa":4.53,"fee_paid":1,"lms_logins":36,"scholarship":0,"backlogs":0,"family_income":"high","risk_prob":0.26,"risk_level":"Low"},{"student_id":"STU0003","name":"Student_3","department":"ME","semester":8,"attendance_pct":84.3,"internal_marks":59.8,"sgpa":4.9,"fee_paid":1,"lms_logins":27,"scholarship":1,"backlogs":0,"family_income":"high","risk_prob":0.37,"risk_level":"Medium"},{"student_id":"STU0004","name":"Student_4","department":"EEE","semester":8,"attendance_pct":66.4,"internal_marks":71.0,"sgpa":6.04,"fee_paid":1,"lms_logins":66,"scholarship":0,"backlogs":3,"family_income":"low","risk_prob":0.81,"risk_level":"High"},{"student_id":"STU0005","name":"Student_5","department":"EEE","semester":2,"attendance_pct":77.8,"internal_marks":56.5,"sgpa":5.59,"fee_paid":0,"lms_logins":68,"scholarship":0,"backlogs":3,"family_income":"medium","risk_prob":0.29,"risk_level":"Low"},{"student_id":"STU0006","name":"Student_6","department":"ECE","semester":8,"attendance_pct":69.7,"internal_marks":74.2,"sgpa":6.22,"fee_paid":1,"lms_logins":27,"scholarship":1,"backlogs":1,"family_income":"low","risk_prob":0.7,"risk_level":"High"},{"student_id":"STU0007","name":"Student_7","department":"ME","semester":5,"attendance_pct":73.7,"internal_marks":45.7,"sgpa":6.58,"fee_paid":1,"lms_logins":2,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.08,"risk_level":"Low"},{"student_id":"STU0008","name":"Student_8","department":"ME","semester":7,"attendance_pct":82.7,"internal_marks":80.4,"sgpa":7.29,"fee_paid":0,"lms_logins":60,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.85,"risk_level":"High"},{"student_id":"STU0009","name":"Student_9","department":"ME","semester":4,"attendance_pct":57.3,"internal_marks":96.4,"sgpa":6.39,"fee_paid":0,"lms_logins":26,"scholarship":0,"backlogs":1,"family_income":"medium","risk_prob":0.14,"risk_level":"Low"},{"student_id":"STU0010","name":"Student_10","department":"EEE","semester":6,"attendance_pct":100.0,"internal_marks":48.5,"sgpa":7.23,"fee_paid":1,"lms_logins":55,"scholarship":0,"backlogs":0,"family_income":"medium","risk_prob":0.14,"risk_level":"Low"},{"student_id":"STU0011","name":"Student_11","department":"CE","semester":8,"attendance_pct":53.9,"internal_marks":47.0,"sgpa":6.6,"fee_paid":1,"lms_logins":0,"scholarship":1,"backlogs":0,"family_income":"high","risk_prob":0.96,"risk_level":"High"},{"student_id":"STU0012","name":"Student_12","department":"ME","semester":4,"attendance_pct":50.1,"internal_marks":81.2,"sgpa":3.54,"fee_paid":1,"lms_logins":57,"scholarship":0,"backlogs":1,"family_income":"low","risk_prob":0.63,"risk_level":"Medium"},{"student_id":"STU0013","name":"Student_13","department":"EEE","semester":8,"attendance_pct":92.8,"internal_marks":83.4,"sgpa":5.09,"fee_paid":1,"lms_logins":15,"scholarship":0,"backlogs":0,"family_income":"medium","risk_prob":0.09,"risk_level":"Low"},{"student_id":"STU0014","name":"Student_14","department":"ECE","semester":7,"attendance_pct":86.2,"internal_marks":45.6,"sgpa":6.28,"fee_paid":1,"lms_logins":54,"scholarship":1,"backlogs":2,"family_income":"medium","risk_prob":0.18,"risk_level":"Low"},{"student_id":"STU0015","name":"Student_15","department":"CE","semester":1,"attendance_pct":83.2,"internal_marks":47.4,"sgpa":4.69,"fee_paid":1,"lms_logins":40,"scholarship":0,"backlogs":0,"family_income":"low","risk_prob":0.83,"risk_level":"High"},{"student_id":"STU0016","name":"Student_16","department":"ECE","semester":6,"attendance_pct":83.3,"internal_marks":49.9,"sgpa":7.4,"fee_paid":0,"lms_logins":20,"scholarship":1,"backlogs":0,"family_income":"low","risk_prob":0.48,"risk_level":"Medium"},{"student_id":"STU0017","name":"Student_17","department":"CE","semester":3,"attendance_pct":71.8,"internal_marks":30.8,"sgpa":8.8,"fee_paid":1,"lms_logins":31,"scholarship":1,"backlogs":1,"family_income":"high","risk_prob":0.74,"risk_level":"High"},{"student_id":"STU0018","name":"Student_18","department":"EEE","semester":2,"attendance_pct":55.8,"internal_marks":38.5,"sgpa":8.33,"fee_paid":1,"lms_logins":53,"scholarship":0,"backlogs":0,"family_income":"high","risk_prob":0.89,"risk_level":"High"},{"student_id":"STU0019","name":"Student_19","department":"CSE","semester":2,"attendance_pct":73.4,"internal_marks":36.9,"sgpa":6.18,"fee_paid":1,"lms_logins":42,"scholarship":0,"backlogs":4,"family_income":"high","risk_prob":0.59,"risk_level":"Medium"},{"student_id":"STU0020","name":"Student_20","department":"CE","semester":6,"attendance_pct":59.8,"internal_marks":41.2,"sgpa":8.74,"fee_paid":1,"lms_logins":51,"scholarship":1,"backlogs":1,"family_income":"high","risk_prob":0.27,"risk_level":"Low"},{"student_id":"STU0021","name":"Student_21","department":"ECE","semester":7,"attendance_pct":89.6,"internal_marks":54.4,"sgpa":6.72,"fee_paid":1,"lms_logins":79,"scholarship":1,"backlogs":0,"family_income":"low","risk_prob":0.7,"risk_level":"High"},{"student_id":"STU0022","name":"Student_22","department":"EEE","semester":1,"attendance_pct":69.4,"internal_marks":59.2,"sgpa":5.99,"fee_paid":0,"lms_logins":8,"scholarship":1,"backlogs":2,"family_income":"medium","risk_prob":0.85,"risk_level":"High"},{"student_id":"STU0023","name":"Student_23","department":"CE","semester":2,"attendance_pct":57.1,"internal_marks":82.9,"sgpa":5.58,"fee_paid":1,"lms_logins":72,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.39,"risk_level":"Medium"},{"student_id":"STU0024","name":"Student_24","department":"CSE","semester":1,"attendance_pct":66.2,"internal_marks":37.0,"sgpa":6.05,"fee_paid":0,"lms_logins":42,"scholarship":1,"backlogs":3,"family_income":"medium","risk_prob":0.94,"risk_level":"High"},{"student_id":"STU0025","name":"Student_25","department":"CSE","semester":5,"attendance_pct":79.4,"internal_marks":72.7,"sgpa":5.92,"fee_paid":1,"lms_logins":22,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.1,"risk_level":"Low"},{"student_id":"STU0026","name":"Student_26","department":"ME","semester":4,"attendance_pct":61.9,"internal_marks":51.1,"sgpa":6.76,"fee_paid":0,"lms_logins":13,"scholarship":0,"backlogs":1,"family_income":"medium","risk_prob":0.21,"risk_level":"Low"},{"student_id":"STU0027","name":"Student_27","department":"ME","semester":7,"attendance_pct":57.2,"internal_marks":54.1,"sgpa":6.74,"fee_paid":0,"lms_logins":36,"scholarship":0,"backlogs":0,"family_income":"medium","risk_prob":0.86,"risk_level":"High"},{"student_id":"STU0028","name":"Student_28","department":"ECE","semester":3,"attendance_pct":76.4,"internal_marks":67.1,"sgpa":6.5,"fee_paid":1,"lms_logins":58,"scholarship":0,"backlogs":1,"family_income":"medium","risk_prob":0.03,"risk_level":"Low"},{"student_id":"STU0029","name":"Student_29","department":"CE","semester":4,"attendance_pct":76.4,"internal_marks":34.8,"sgpa":7.16,"fee_paid":0,"lms_logins":37,"scholarship":0,"backlogs":2,"family_income":"low","risk_prob":0.87,"risk_level":"High"},{"student_id":"STU0030","name":"Student_30","department":"CE","semester":4,"attendance_pct":62.9,"internal_marks":61.9,"sgpa":8.29,"fee_paid":1,"lms_logins":70,"scholarship":0,"backlogs":2,"family_income":"medium","risk_prob":0.11,"risk_level":"Low"},{"student_id":"STU0031","name":"Student_31","department":"ME","semester":5,"attendance_pct":63.5,"internal_marks":58.0,"sgpa":7.92,"fee_paid":1,"lms_logins":10,"scholarship":0,"backlogs":0,"family_income":"medium","risk_prob":0.31,"risk_level":"Low"},{"student_id":"STU0032","name":"Student_32","department":"CE","semester":2,"attendance_pct":76.2,"internal_marks":63.9,"sgpa":4.27,"fee_paid":0,"lms_logins":39,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.77,"risk_level":"High"},{"student_id":"STU0033","name":"Student_33","department":"CE","semester":3,"attendance_pct":45.9,"internal_marks":60.2,"sgpa":2.67,"fee_paid":0,"lms_logins":14,"scholarship":0,"backlogs":2,"family_income":"low","risk_prob":0.93,"risk_level":"High"},{"student_id":"STU0034","name":"Student_34","department":"CSE","semester":2,"attendance_pct":46.7,"internal_marks":99.2,"sgpa":7.9,"fee_paid":1,"lms_logins":47,"scholarship":0,"backlogs":3,"family_income":"medium","risk_prob":0.51,"risk_level":"Medium"},{"student_id":"STU0035","name":"Student_35","department":"ME","semester":6,"attendance_pct":59.1,"internal_marks":43.5,"sgpa":4.45,"fee_paid":1,"lms_logins":57,"scholarship":0,"backlogs":0,"family_income":"low","risk_prob":0.24,"risk_level":"Low"},{"student_id":"STU0036","name":"Student_36","department":"EEE","semester":4,"attendance_pct":68.2,"internal_marks":45.4,"sgpa":6.16,"fee_paid":1,"lms_logins":31,"scholarship":0,"backlogs":1,"family_income":"medium","risk_prob":0.12,"risk_level":"Low"},{"student_id":"STU0037","name":"Student_37","department":"ME","semester":6,"attendance_pct":77.6,"internal_marks":43.8,"sgpa":4.74,"fee_paid":1,"lms_logins":0,"scholarship":0,"backlogs":0,"family_income":"high","risk_prob":0.8,"risk_level":"High"},{"student_id":"STU0038","name":"Student_38","department":"EEE","semester":1,"attendance_pct":98.6,"internal_marks":45.0,"sgpa":3.8,"fee_paid":1,"lms_logins":43,"scholarship":0,"backlogs":3,"family_income":"medium","risk_prob":0.84,"risk_level":"High"},{"student_id":"STU0039","name":"Student_39","department":"CSE","semester":4,"attendance_pct":87.4,"internal_marks":43.5,"sgpa":7.31,"fee_paid":1,"lms_logins":48,"scholarship":0,"backlogs":0,"family_income":"low","risk_prob":0.08,"risk_level":"Low"},{"student_id":"STU0040","name":"Student_40","department":"ECE","semester":2,"attendance_pct":69.1,"internal_marks":76.4,"sgpa":7.64,"fee_paid":1,"lms_logins":48,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.26,"risk_level":"Low"},{"student_id":"STU0041","name":"Student_41","department":"CE","semester":4,"attendance_pct":71.7,"internal_marks":80.6,"sgpa":5.64,"fee_paid":1,"lms_logins":64,"scholarship":1,"backlogs":2,"family_income":"medium","risk_prob":0.13,"risk_level":"Low"},{"student_id":"STU0042","name":"Student_42","department":"CSE","semester":1,"attendance_pct":54.0,"internal_marks":44.7,"sgpa":2.61,"fee_paid":0,"lms_logins":18,"scholarship":1,"backlogs":0,"family_income":"high","risk_prob":0.31,"risk_level":"Low"},{"student_id":"STU0043","name":"Student_43","department":"CE","semester":5,"attendance_pct":71.7,"internal_marks":40.0,"sgpa":5.68,"fee_paid":1,"lms_logins":53,"scholarship":1,"backlogs":1,"family_income":"medium","risk_prob":0.14,"risk_level":"Low"},{"student_id":"STU0044","name":"Student_44","department":"ECE","semester":6,"attendance_pct":66.8,"internal_marks":63.5,"sgpa":7.09,"fee_paid":1,"lms_logins":63,"scholarship":0,"backlogs":1,"family_income":"medium","risk_prob":0.05,"risk_level":"Low"},{"student_id":"STU0045","name":"Student_45","department":"ECE","semester":8,"attendance_pct":77.8,"internal_marks":45.1,"sgpa":4.28,"fee_paid":1,"lms_logins":4,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.14,"risk_level":"Low"},{"student_id":"STU0046","name":"Student_46","department":"CSE","semester":6,"attendance_pct":57.1,"internal_marks":66.4,"sgpa":6.78,"fee_paid":1,"lms_logins":46,"scholarship":1,"backlogs":0,"family_income":"low","risk_prob":0.13,"risk_level":"Low"},{"student_id":"STU0047","name":"Student_47","department":"ECE","semester":2,"attendance_pct":81.3,"internal_marks":58.7,"sgpa":6.48,"fee_paid":1,"lms_logins":29,"scholarship":0,"backlogs":1,"family_income":"low","risk_prob":0.32,"risk_level":"Low"},{"student_id":"STU0048","name":"Student_48","department":"EEE","semester":4,"attendance_pct":99.6,"internal_marks":27.7,"sgpa":7.37,"fee_paid":1,"lms_logins":38,"scholarship":1,"backlogs":0,"family_income":"medium","risk_prob":0.13,"risk_level":"Low"},{"student_id":"STU0049","name":"Student_49","department":"ECE","semester":2,"attendance_pct":70.0,"internal_marks":82.9,"sgpa":6.68,"fee_paid":1,"lms_logins":46,"scholarship":0,"backlogs":1,"family_income":"medium","risk_prob":0.07,"risk_level":"Low"},{"student_id":"STU0050","name":"Student_50","department":"CE","semester":5,"attendance_pct":79.2,"internal_marks":87.3,"sgpa":5.04,"fee_paid":1,"lms_logins":30,"scholarship":1,"backlogs":2,"family_income":"medium","risk_prob":0.06,"risk_level":"Low"},{"student_id":"STU0320","name":"Student_320","department":"ME","semester":1,"attendance_pct":64.3,"internal_marks":63.2,"sgpa":8.04,"fee_paid":0,"lms_logins":14,"scholarship":1,"backlogs":4,"family_income":"medium","risk_prob":0.98,"risk_level":"High"},{"student_id":"STU0011b","name":"Student_11b","department":"CE","semester":8,"attendance_pct":53.9,"internal_marks":47.0,"sgpa":6.6,"fee_paid":1,"lms_logins":0,"scholarship":1,"backlogs":0,"family_income":"high","risk_prob":0.96,"risk_level":"High"},{"student_id":"STU0024b","name":"Student_24b","department":"CSE","semester":1,"attendance_pct":66.2,"internal_marks":37.0,"sgpa":6.05,"fee_paid":0,"lms_logins":42,"scholarship":1,"backlogs":3,"family_income":"medium","risk_prob":0.94,"risk_level":"High"},{"student_id":"STU0033b","name":"Student_33b","department":"CE","semester":3,"attendance_pct":45.9,"internal_marks":60.2,"sgpa":2.67,"fee_paid":0,"lms_logins":14,"scholarship":0,"backlogs":2,"family_income":"low","risk_prob":0.93,"risk_level":"High"},{"student_id":"STU0340b","name":"Student_340b","department":"CE","semester":2,"attendance_pct":52.1,"internal_marks":31.2,"sgpa":5.97,"fee_paid":0,"lms_logins":41,"scholarship":0,"backlogs":0,"family_income":"high","risk_prob":0.93,"risk_level":"High"},{"student_id":"STU0384b","name":"Student_384b","department":"CE","semester":1,"attendance_pct":49.5,"internal_marks":64.9,"sgpa":5.48,"fee_paid":1,"lms_logins":36,"scholarship":0,"backlogs":0,"family_income":"low","risk_prob":0.93,"risk_level":"High"},{"student_id":"STU0480b","name":"Student_480b","department":"EEE","semester":1,"attendance_pct":49.0,"internal_marks":70.1,"sgpa":7.51,"fee_paid":0,"lms_logins":61,"scholarship":0,"backlogs":1,"family_income":"low","risk_prob":0.93,"risk_level":"High"},{"student_id":"STU0437b","name":"Student_437b","department":"ECE","semester":4,"attendance_pct":55.4,"internal_marks":61.0,"sgpa":2.45,"fee_paid":0,"lms_logins":43,"scholarship":1,"backlogs":0,"family_income":"low","risk_prob":0.95,"risk_level":"High"},{"student_id":"STU0097b","name":"Student_97b","department":"EEE","semester":3,"attendance_pct":84.8,"internal_marks":49.5,"sgpa":8.49,"fee_paid":1,"lms_logins":28,"scholarship":0,"backlogs":3,"family_income":"medium","risk_prob":0.95,"risk_level":"High"},{"student_id":"STU0171b","name":"Student_171b","department":"CSE","semester":4,"attendance_pct":58.4,"internal_marks":54.9,"sgpa":6.84,"fee_paid":0,"lms_logins":10,"scholarship":0,"backlogs":2,"family_income":"low","risk_prob":0.92,"risk_level":"High"},{"student_id":"STU0192b","name":"Student_192b","department":"EEE","semester":2,"attendance_pct":63.2,"internal_marks":62.1,"sgpa":5.82,"fee_paid":0,"lms_logins":21,"scholarship":0,"backlogs":2,"family_income":"low","risk_prob":0.92,"risk_level":"High"}],"dept_labels":["CE","CSE","ECE","EEE","ME"],"income_labels":["high","low","medium"]};
+
+// ── STATE ─────────────────────────────────────
+let importedStudents = [];
+let currentFilter = 'All';
+let detailBackPage = 'students';
+
+// ── Clock ─────────────────────────────────────
+function updateClock(){
+  const t=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  ['live-time','live-time2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});
+}
+updateClock();setInterval(updateClock,1000);
+
+// ── Navigation ────────────────────────────────
+function showPage(id,navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(navEl)navEl.classList.add('active');
+  if(id==='students')renderTable();
+}
+
+// ── Toast ─────────────────────────────────────
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── Dashboard ─────────────────────────────────
+function updateDashboard(){
+  const all=[...SYSTEM_DATA.all_students,...importedStudents];
+  const high=all.filter(s=>s.risk_level==='High').length;
+  const med=all.filter(s=>s.risk_level==='Medium').length;
+  const low=all.filter(s=>s.risk_level==='Low').length;
+  document.getElementById('s-total').textContent=all.length;
+  document.getElementById('s-high').textContent=high;
+  document.getElementById('s-med').textContent=med;
+  document.getElementById('s-low').textContent=low;
+
+  // Donut
+  const total=high+med+low||1;
+  const slices=[
+    {val:high,color:'#e74c3c',label:'High Risk'},
+    {val:med,color:'#d4a017',label:'Medium'},
+    {val:low,color:'#1e7e5e',label:'Low Risk'}
+  ];
+  const cx=58,cy=58,r=44,circ=2*Math.PI*r;
+  let offset=0,svg=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ede9e3" stroke-width="16"/>`;
+  slices.forEach(sl=>{
+    const dash=(sl.val/total)*circ,gap=circ-dash;
+    svg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${sl.color}" stroke-width="16" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"/>`;
+    offset+=dash;
+  });
+  document.getElementById('donut-svg').innerHTML=svg;
+  document.getElementById('donut-total').textContent=total;
+  document.getElementById('donut-legend').innerHTML=slices.map(s=>`
+    <div class="leg">
+      <div class="leg-dot" style="background:${s.color}"></div>
+      <span class="leg-label">${s.label}</span>
+      <span class="leg-count">${s.val}</span>
+      <span class="leg-pct">${(s.val/total*100).toFixed(1)}%</span>
+    </div>`).join('');
+
+  // Dept rows
+  const deptMap={};
+  all.forEach(s=>{
+    if(!deptMap[s.department])deptMap[s.department]={total:0,high:0};
+    deptMap[s.department].total++;
+    if(s.risk_level==='High')deptMap[s.department].high++;
+  });
+  const maxH=Math.max(...Object.values(deptMap).map(d=>d.high),1);
+  document.getElementById('dept-rows').innerHTML=Object.entries(deptMap)
+    .sort((a,b)=>b[1].high-a[1].high)
+    .map(([dept,d])=>`
+    <div class="dept-row">
+      <div class="dept-tag">${dept}</div>
+      <div><div class="dept-bar-wrap"><div class="dept-bar-fill" style="width:${(d.high/maxH*100).toFixed(0)}%"></div></div></div>
+      <div class="dept-num"><b>${d.high}</b></div>
+      <div class="dept-num">${(d.high/d.total*100).toFixed(0)}%</div>
+    </div>`).join('');
+
+  // Alerts
+  const topRisk=all.filter(s=>s.risk_level==='High').sort((a,b)=>b.risk_prob-a.risk_prob).slice(0,8);
+  document.getElementById('alert-list').innerHTML=topRisk.map(s=>`
+    <div class="alert-row">
+      <div>
+        <div class="alert-id">${s.student_id}${s._imported?'<span class="source-badge source-uploaded">CSV</span>':''}</div>
+        <div class="alert-dept">${s.department} · Sem ${s.semester}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge badge-high">${(s.risk_prob*100).toFixed(0)}%</span>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:0.5px">HIGH RISK</div>
+      </div>
+    </div>`).join('');
+}
+updateDashboard();
+
+// ── Table ─────────────────────────────────────
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable(){
+  const q=(document.getElementById('search-input')||{}).value?.toLowerCase()||'';
+  const all=[...SYSTEM_DATA.all_students,...importedStudents];
+  const filtered=all.filter(s=>{
+    const fl=currentFilter==='All'?true:currentFilter==='imported'?!!s._imported:s.risk_level===currentFilter;
+    const sq=!q||s.student_id.toLowerCase().includes(q)||(s.name||'').toLowerCase().includes(q)||s.department.toLowerCase().includes(q);
+    return fl&&sq;
+  }).sort((a,b)=>b.risk_prob-a.risk_prob);
+  const tbody=document.getElementById('student-tbody');
+  if(!tbody)return;
+  tbody.innerHTML=filtered.slice(0,60).map(s=>{
+    const lvl=s.risk_level.toLowerCase(),prob=(s.risk_prob*100).toFixed(0);
+    const ac=s.attendance_pct<60?'var(--red-light)':s.attendance_pct<75?'var(--gold2)':'var(--green-light)';
+    const gc=s.sgpa<5?'var(--red-light)':s.sgpa<7?'var(--gold2)':'var(--green-light)';
+    const bc=s.backlogs>2?'var(--red-light)':s.backlogs>0?'var(--gold2)':'var(--green-light)';
+    const src=s._imported?'<span class="source-badge source-uploaded">📂 CSV</span>':'<span class="source-badge source-system">⚙ System</span>';
+    const sdata=encodeURIComponent(JSON.stringify(s));
+    return `<tr>
+      <td class="student-id">${s.student_id}</td>
+      <td>${s.name||'—'}</td>
+      <td><span class="dept-tag-sm">${s.department}</span></td>
+      <td style="text-align:center;font-family:var(--mono)">${s.semester}</td>
+      <td style="color:${ac};font-family:var(--mono);font-size:11.5px">${s.attendance_pct}%</td>
+      <td style="color:${gc};font-family:var(--mono);font-size:11.5px">${s.sgpa}</td>
+      <td style="text-align:center;color:${bc};font-family:var(--mono);font-size:11.5px">${s.backlogs}</td>
+      <td style="text-align:center">${s.fee_paid?'<span style="color:var(--green-light);font-weight:600;font-size:12px">Yes</span>':'<span style="color:var(--red-light);font-weight:600;font-size:12px">No</span>'}</td>
+      <td><div class="prob-bar"><div class="prob-track"><div class="prob-fill ${lvl}" style="width:${prob}%"></div></div><span class="prob-pct">${prob}%</span></div></td>
+      <td><span class="badge badge-${lvl}">${s.risk_level}</span></td>
+      <td>${src}</td>
+      <td><button class="btn-detail" onclick="openDetail(decodeURIComponent('${sdata}'),'students')">Details →</button></td>
+      <td><button class="btn-detail" onclick="openSurvey('${s.student_id}')">🧠 Fill</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('table-count').textContent=`Showing ${Math.min(filtered.length,60)} of ${filtered.length} students · sorted by risk score`;
+}
+renderTable();
+
+// ── Risk Engine ───────────────────────────────
+function getRiskProb(s){
+  const score=(100-(+s.attendance_pct||75))*0.03+(100-(+s.internal_marks||60))*0.025+(10-(+s.sgpa||6.5))*0.15+(1-(+s.fee_paid||0))*1.2+(100-(+s.lms_logins||30))*0.01+(+s.backlogs||0)*0.4+(s.family_income==='low'?0.8:0);
+  return Math.min(0.99,Math.max(0.01,1/(1+Math.exp(-(score-4)))));
+}
+function getRiskLevel(p){return p>0.65?'High':p>0.35?'Medium':'Low';}
+
+function getInterventions(s){
+  const r=[];
+  if((+s.attendance_pct||75)<75)r.push(`Attendance counselling — ${s.attendance_pct}% (below 75% threshold)`);
+  if((+s.sgpa||6.5)<6)r.push(`Assign academic mentor — SGPA: ${s.sgpa}`);
+  if(!(+s.fee_paid))r.push('Refer to financial aid office — fee payment pending');
+  if((+s.lms_logins||30)<20)r.push(`Low digital engagement — only ${s.lms_logins} LMS sessions`);
+  if((+s.backlogs||0)>0)r.push(`Remedial classes for ${s.backlogs} backlog subject(s)`);
+  if(s.family_income==='low')r.push('Welfare officer referral for socioeconomic support');
+  if(!(+s.scholarship))r.push('Evaluate scholarship eligibility');
+  if(!r.length)r.push('Continue regular monitoring — maintain current performance');
+  return r;
+}
+
+// ── Student Detail ────────────────────────────
+function openDetail(jsonStr,backPage){
+  const s=JSON.parse(jsonStr);
+  detailBackPage=backPage||'students';
+  document.getElementById('detail-back-btn').onclick=()=>{
+    showPage(detailBackPage,document.querySelectorAll('.nav-item')[detailBackPage==='students'?1:0]);
+  };
+
+  const lvl=s.risk_level;
+  const c=lvl==='High'?'#e74c3c':lvl==='Medium'?'#d4a017':'#1e7e5e';
+  const initials=(s.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+  document.getElementById('detail-hero').innerHTML=`
+    <div class="student-avatar">${initials}</div>
+    <div class="student-info">
+      <h3>${s.name||s.student_id}</h3>
+      <div class="sid">${s.student_id}${s._imported?'  <span class="source-badge source-uploaded">📂 CSV Import</span>':''}</div>
+      <div class="tags">
+        <span class="student-tag">${s.department}</span>
+        <span class="student-tag">Semester ${s.semester}</span>
+        <span class="student-tag">${s.family_income} income</span>
+        <span style="font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);color:${c};padding:3px 10px;border-radius:4px;">${lvl} Risk · ${(s.risk_prob*100).toFixed(0)}%</span>
+      </div>
+    </div>`;
+
+  const metrics=[
+    {l:'Attendance',v:s.attendance_pct+'%',c:s.attendance_pct<60?'var(--red-light)':s.attendance_pct<75?'var(--gold2)':'var(--green-light)'},
+    {l:'Internal Marks',v:s.internal_marks,c:s.internal_marks<40?'var(--red-light)':s.internal_marks<60?'var(--gold2)':'var(--green-light)'},
+    {l:'SGPA',v:s.sgpa,c:s.sgpa<5?'var(--red-light)':s.sgpa<7?'var(--gold2)':'var(--green-light)'},
+    {l:'LMS Sessions',v:s.lms_logins,c:s.lms_logins<20?'var(--red-light)':s.lms_logins<40?'var(--gold2)':'var(--green-light)'},
+    {l:'Backlogs',v:s.backlogs,c:s.backlogs>2?'var(--red-light)':s.backlogs>0?'var(--gold2)':'var(--green-light)'},
+    {l:'Fee Paid',v:s.fee_paid?'Yes':'No',c:s.fee_paid?'var(--green-light)':'var(--red-light)'},
+    {l:'Scholarship',v:s.scholarship?'Yes':'No',c:s.scholarship?'var(--green-light)':'var(--muted)'},
+    {l:'Department',v:s.department,c:'var(--navy)'},
+  ];
+
+  document.getElementById('detail-metrics').innerHTML=metrics.map(m=>`
+  
+    <div class="metric-item">
+      <div class="metric-label">${m.l}</div>
+      <div class="metric-val" style="color:${m.c}">${m.v}</div>
+    </div>`).join('');
+
+  const pct=Math.round(s.risk_prob*100);
+
+  // 🔹 FIRST build HTML
+  let riskHTML=`
+    <div style="text-align:center;padding:16px 0;border-bottom:1px solid var(--border);margin-bottom:16px;">
+      <div style="font-family:var(--head);font-size:56px;font-weight:900;line-height:1;color:${c}">${pct}%</div>
+      <div style="font-family:var(--mono);font-size:11px;color:${c};margin-top:7px">${lvl.toUpperCase()} DROPOUT RISK</div>
+    </div>
+
+    <div class="bar-bg" style="height:10px;border-radius:5px;margin-bottom:14px">
+      <div style="width:${pct}%;height:10px;border-radius:5px;background:${c};transition:width 1s ease;"></div>
+    </div>
+  `;
+
+  // 🔹 THEN condition add
+  if(surveyScores && surveyScores[s.student_id]){
+    riskHTML+=`
+      <div style="margin-top:10px;background:#fff3cd;border:1px solid #ffe69c;padding:10px;border-radius:6px">
+        Behavioural risk impact: ${(surveyScores[s.student_id]*100).toFixed(1)}%
+      </div>
+    `;
+  }
+
+  // 🔹 FINAL block
+  riskHTML+=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:12px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:5px">RISK LEVEL</div>
+        <div style="font-family:var(--head);font-size:17px;color:${c}">${lvl}</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:12px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:5px">DATA SOURCE</div>
+        <div style="font-family:var(--head);font-size:15px;color:var(--navy)">${s._imported?'CSV Import':'System'}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detail-risk').innerHTML=riskHTML;
+
+  const interventions=getInterventions(s);
+  document.getElementById('detail-interventions').innerHTML=interventions.map(i=>`<div class="int-item">${i}</div>`).join('');
+
+  document.getElementById('detail-timeline').innerHTML=[
+    {dot:c,text:'Risk assessment completed — action required',time:'Today'},
+    {dot:'var(--gold2)',text:'Counselor notification sent automatically',time:'Today'},
+    {dot:'var(--navy)',text:'Schedule intervention meeting within 7 days',time:'Next Week'},
+    {dot:'var(--border2)',text:'Follow-up assessment recommended',time:'30 Days'},
+    {dot:'var(--muted)',text:'Re-evaluate risk score after interventions',time:'60 Days'},
+  ].map(t=>`<div class="timeline-item"><div class="tl-dot" style="background:${t.dot}"></div><div><div class="tl-text">${t.text}</div><div class="tl-time">${t.time}</div></div></div>`).join('');
+
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-student-detail').classList.add('active');
+  window.scrollTo(0,0);
+}
+// ── Feature Analysis ──────────────────────────
+(function initFeatures(){
+  const fi=SYSTEM_DATA.feature_importance;
+  const names={attendance_pct:'Attendance %',internal_marks:'Internal Marks',sgpa:'SGPA',fee_paid:'Fee Payment',lms_logins:'LMS Logins',scholarship:'Scholarship',backlogs:'Backlogs',dept_enc:'Department',income_enc:'Family Income',semester:'Semester'};
+  const sorted=Object.entries(fi).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0][1];
+  document.getElementById('feat-bars-full').innerHTML=sorted.map(([k,v],i)=>`
+    <div class="feat-row">
+      <div class="feat-meta"><b>${names[k]||k}</b><span>${(v*100).toFixed(1)}%</span></div>
+      <div class="bar-bg"><div class="bar-fill ${i===0?'r1':i===1?'r2':i===2?'r3':''}" style="width:${(v/max*100).toFixed(0)}%"></div></div>
+    </div>`).join('');
+  document.getElementById('model-insights').innerHTML=`
+    <div style="margin-bottom:14px;padding:14px;background:var(--navy3);border:1px solid rgba(15,39,68,0.12);border-radius:7px;">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px">Top Predictor</div>
+      <div style="font-family:var(--head);font-size:18px;color:var(--navy)">${names[sorted[0][0]]}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">${(sorted[0][1]*100).toFixed(1)}% importance</div>
+    </div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">
+      <p style="margin-bottom:9px">Attendance is the strongest dropout signal — students below 65% are 3× more likely to drop out.</p>
+      <p>Fee non-payment combined with low SGPA is a critical compounded risk indicator.</p>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:7px">MODEL ACCURACY</div>
+      <div style="font-family:var(--head);font-size:30px;font-weight:900;color:var(--navy)">${(SYSTEM_DATA.summary.accuracy*100).toFixed(0)}%</div>
+    </div>`;
+})();
+let activeSurveyStudent=null;
+let surveyScores={};
+let surveyAnswers={}
+
+function openSurvey(id){
+  activeSurveyStudent=id;
+  document.getElementById("surveyModal").style.display="flex";
+}
+
+function closeSurvey(){
+  document.getElementById("surveyModal").style.display="none";
+}
+
+function submitStudentSurvey(){
+
+  const mot=parseFloat(document.getElementById("sv_mot").value);
+  const stress=parseFloat(document.getElementById("sv_stress").value||3);
+  const support=parseFloat(document.getElementById("sv_support").value);
+  const work=parseFloat(document.getElementById("sv_work").value);
+  const engage=parseFloat(document.getElementById("sv_engage").value||3);
+
+  const behaviouralRisk=
+    (1-mot)*0.25+
+    (stress/5)*0.25+
+    (1-support)*0.2+
+    work*0.15+
+    (1-engage/5)*0.15;
+
+  surveyScores[activeSurveyStudent]=behaviouralRisk;
+  surveyAnswers[activeSurveyStudent]={
+  motivation:mot,
+  stress:stress,
+  support:support,
+  work:work,
+  engagement:engage
+};
+  const all=[...SYSTEM_DATA.all_students,...importedStudents];
+  const s=all.find(x=>x.student_id===activeSurveyStudent);
+
+  if(s){
+    s.risk_prob=Math.min(0.99,s.risk_prob+behaviouralRisk*0.4);
+    s.risk_level=s.risk_prob>0.65?'High':s.risk_prob>0.35?'Medium':'Low';
+  }
+
+  updateDashboard();
+  renderTable();
+  closeSurvey();
+  toast("Behavioural factors added to AI ✔");
+}
+// ════════════════════════════════════════════════
+// CSV IMPORT ENGINE
+// ════════════════════════════════════════════════
+const COLUMN_ALIASES={
+  student_id:['student_id','id','roll_no','roll','reg_no','registration','student no','enrollment'],
+  name:['name','student_name','full_name','student name','sname'],
+  department:['department','dept','branch','stream','division','course'],
+  semester:['semester','sem','term','year'],
+  attendance_pct:['attendance_pct','attendance','attend','attend%','att%','att','attendance %','attendance(%)','attendance percentage'],
+  internal_marks:['internal_marks','internal','marks','score','ia_marks','internal assessment','ia marks','ca marks'],
+  sgpa:['sgpa','gpa','cgpa','grade_points','grade points','grades','spi'],
+  fee_paid:['fee_paid','fee','fees paid','fees_paid','fee status','feepaid'],
+  lms_logins:['lms_logins','lms','portal_logins','online_sessions','lms logins','lms sessions'],
+  backlogs:['backlogs','arrears','pending_subjects','backlog','arrear','pending subjects','supply'],
+  family_income:['family_income','income','family income','economic_status','economic status','income level'],
+  scholarship:['scholarship','scholarship_status','schol','merit'],
+};
+let parsedCSV=null;
+let columnMapping={};
+
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  if(lines.length<2)return null;
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const rows=lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const vals=[];let inQ=false,cur='';
+    for(let ch of line+','){
+      if(ch==='"'){inQ=!inQ;}
+      else if(ch===','&&!inQ){vals.push(cur.trim());cur='';}
+      else cur+=ch;
+    }
+    const obj={};headers.forEach((h,i)=>{obj[h]=vals[i]||'';});
+    return obj;
+  });
+  return{headers,rows};
+}
+
+function autoMap(headers){
+  const mapping={};
+  for(const[sysField,aliases]of Object.entries(COLUMN_ALIASES)){
+    for(const alias of aliases){
+      const found=headers.find(h=>h===alias||h.replace(/[_\s-]/g,'')===alias.replace(/[_\s-]/g,''));
+      if(found){mapping[sysField]=found;break;}
+    }
+  }
+  return mapping;
+}
+
+function buildMappingUI(headers,mapping){
+  const container=document.getElementById('mapping-rows');
+  const sysFields=Object.keys(COLUMN_ALIASES);
+  container.innerHTML=sysFields.map(field=>{
+    const mapped=mapping[field]||'';
+    const opts=['— skip —',...headers].map(h=>`<option value="${h}" ${h===mapped?'selected':''}>${h||'— skip —'}</option>`).join('');
+    const isKey=['department','semester','attendance_pct','internal_marks','sgpa'].includes(field);
+    return`<div class="map-row">
+      <div class="map-label">${field}${isKey?' <span style="color:var(--red-light)">*</span>':''}</div>
+      <div class="map-arrow">→</div>
+      <select class="map-select" id="map-${field}">${opts}</select>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('csv-upload').addEventListener('change',function(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    parsedCSV=parseCSV(ev.target.result);
+    if(!parsedCSV||!parsedCSV.rows.length){toast('Could not parse CSV — check format','err');return;}
+    columnMapping=autoMap(parsedCSV.headers);
+    buildMappingUI(parsedCSV.headers,columnMapping);
+    document.getElementById('uz-icon').textContent='✅';
+    document.getElementById('uz-title').textContent=file.name;
+    document.getElementById('uz-sub').textContent=`${parsedCSV.rows.length} rows · ${parsedCSV.headers.length} columns detected`;
+    document.getElementById('upload-zone').classList.add('done');
+    document.getElementById('mapping-panel').classList.add('show');
+    document.getElementById('progress-box').classList.remove('show');
+    document.getElementById('preview-section').classList.remove('show');
+  };
+  reader.readAsText(file);
+});
+
+const zone=document.getElementById('upload-zone');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
+zone.addEventListener('drop',e=>{
+  e.preventDefault();zone.classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(file){document.getElementById('csv-upload').files=e.dataTransfer.files;document.getElementById('csv-upload').dispatchEvent(new Event('change'));}
+});
+
+async function processAndImport(){
+  if(!parsedCSV)return;
+  const activeMapping={};
+  Object.keys(COLUMN_ALIASES).forEach(field=>{
+    const sel=document.getElementById('map-'+field);
+    if(sel&&sel.value&&sel.value!=='— skip —')activeMapping[field]=sel.value;
+  });
+  document.getElementById('mapping-panel').classList.remove('show');
+  const pb=document.getElementById('progress-box');pb.classList.add('show');
+  const steps=['Reading CSV rows','Mapping columns to system format','Cleaning and normalising values','Computing dropout risk scores','Generating student IDs','Finalising import'];
+  async function setStep(i,pct){
+    document.getElementById('prog-fill').style.width=pct+'%';
+    document.getElementById('prog-steps').innerHTML=steps.map((s,idx)=>{
+      const cls=idx<i?'done':idx===i?'active':'wait';
+      return`<div class="prog-step ${cls}"><div class="prog-dot"></div>${s}</div>`;
+    }).join('');
+    await new Promise(r=>setTimeout(r,320));
+  }
+  await setStep(0,10);await setStep(1,25);
+  const newStudents=[];
+  const depts=['CSE','ECE','ME','CE','EEE'];
+  const incomes=['low','medium','high'];
+  parsedCSV.rows.forEach((row,i)=>{
+    const get=field=>{const col=activeMapping[field];return col?(row[col]||'').toString().trim():'';};
+    const dept=get('department').toUpperCase();
+    const validDept=depts.includes(dept)?dept:depts[i%depts.length];
+    const att=Math.min(100,Math.max(0,parseFloat(get('attendance_pct'))||75));
+    const marks=Math.min(100,Math.max(0,parseFloat(get('internal_marks'))||60));
+    const sgpa=Math.min(10,Math.max(0,parseFloat(get('sgpa'))||6.5));
+    const sem=Math.min(8,Math.max(1,parseInt(get('semester'))||1));
+    const lms=Math.max(0,parseInt(get('lms_logins'))||30);
+    const blogs=Math.max(0,parseInt(get('backlogs'))||0);
+    const feeRaw=get('fee_paid').toLowerCase();
+    const fee=['1','yes','true','paid','y'].includes(feeRaw)?1:feeRaw===''?1:0;
+    const scholRaw=get('scholarship').toLowerCase();
+    const scholar=['1','yes','true','y'].includes(scholRaw)?1:0;
+    const incRaw=get('family_income').toLowerCase();
+    const income=incomes.includes(incRaw)?incRaw:'medium';
+    const name=get('name')||`Imported_${i+1}`;
+    const sid=get('student_id')||`IMP${String(importedStudents.length+i+1).padStart(4,'0')}`;
+    const s={student_id:sid,name,department:validDept,semester:sem,attendance_pct:+att.toFixed(1),internal_marks:+marks.toFixed(1),sgpa:+sgpa.toFixed(2),fee_paid:fee,lms_logins:lms,scholarship:scholar,backlogs:blogs,family_income:income,_imported:true};
+    const prob=getRiskProb(s);s.risk_prob=+prob.toFixed(3);s.risk_level=getRiskLevel(prob);
+    newStudents.push(s);
+  });
+  await setStep(2,45);await setStep(3,65);await setStep(4,82);await setStep(5,100);
+  importedStudents.push(...newStudents);
+  pb.classList.remove('show');
+  const prev=document.getElementById('preview-section');prev.classList.add('show');
+  document.getElementById('preview-count').innerHTML=`<b style="color:var(--navy)">${newStudents.length} students</b> imported · <b style="color:var(--red-light)">${newStudents.filter(s=>s.risk_level==='High').length}</b> high risk · <b style="color:var(--gold2)">${newStudents.filter(s=>s.risk_level==='Medium').length}</b> medium`;
+  document.getElementById('preview-tbody').innerHTML=newStudents.slice(0,20).map(s=>{
+    const lvl=s.risk_level.toLowerCase(),prob=(s.risk_prob*100).toFixed(0);
+    return`<tr>
+      <td class="student-id">${s.student_id}</td>
+      <td>${s.name}</td>
+      <td><span class="dept-tag-sm">${s.department}</span></td>
+      <td style="text-align:center;font-family:var(--mono)">${s.semester}</td>
+      <td style="color:${s.attendance_pct<60?'var(--red-light)':s.attendance_pct<75?'var(--gold2)':'var(--green-light)'};font-family:var(--mono);font-size:11.5px">${s.attendance_pct}%</td>
+      <td style="color:${s.sgpa<5?'var(--red-light)':s.sgpa<7?'var(--gold2)':'var(--green-light)'};font-family:var(--mono);font-size:11.5px">${s.sgpa}</td>
+      <td style="text-align:center">${s.backlogs}</td>
+      <td style="text-align:center">${s.fee_paid?'<span style="color:var(--green-light)">Yes</span>':'<span style="color:var(--red-light)">No</span>'}</td>
+      <td><div class="prob-bar"><div class="prob-track"><div class="prob-fill ${lvl}" style="width:${prob}%"></div></div><span class="prob-pct">${prob}%</span></div></td>
+      <td><span class="badge badge-${lvl}">${s.risk_level}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('btn-filter-imported').style.display='';
+  document.getElementById('sidebar-import-count').textContent=`${importedStudents.length} CSV students loaded`;
+  updateDashboard();
+  toast(`✓ ${newStudents.length} students imported successfully!`);
+}
+
+function goToStudents(){
+  const banner=document.getElementById('import-banner');
+  document.getElementById('import-banner-text').textContent=`${importedStudents.length} students imported from CSV · Showing alongside system data`;
+  banner.className='import-banner show success';
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-students').classList.add('active');
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+  currentFilter='imported';
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-filter-imported').classList.add('active');
+  renderTable();
+}
+
+function resetUpload(){
+  parsedCSV=null;columnMapping={};
+  document.getElementById('csv-upload').value='';
+  document.getElementById('uz-icon').textContent='📂';
+  document.getElementById('uz-title').textContent='Drop your CSV here';
+  document.getElementById('uz-sub').textContent='or click to browse files\nAny column names accepted — we map them for you';
+  document.getElementById('upload-zone').classList.remove('done','drag');
+  document.getElementById('mapping-panel').classList.remove('show');
+  document.getElementById('progress-box').classList.remove('show');
+  document.getElementById('preview-section').classList.remove('show');
+}
+</script>
+</body>
+</html>
